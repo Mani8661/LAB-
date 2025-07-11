@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Calculator with Buttons</title>
+<style>
+  body {
+    background: #282c34;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  .calculator {
+    background: #3b3f47;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    width: 320px;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-weight: 700;
+  }
+  .display {
+    background: #1e2127;
+    height: 60px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 28px;
+    padding: 10px 15px;
+    text-align: right;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  button {
+    padding: 18px 0;
+    font-size: 22px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    background: #4a4e57;
+    color: white;
+    transition: background-color 0.2s ease;
+    user-select: none;
+  }
+  button:hover {
+    background: #6a6e77;
+  }
+  button.operator {
+    background: #ff9500;
+  }
+  button.operator:hover {
+    background: #e38c00;
+  }
+  button.equal {
+    background: #00c851;
+    grid-column: span 2;
+  }
+  button.equal:hover {
+    background: #01963a;
+  }
+  button.clear {
+    background: #ff3b30;
+  }
+  button.clear:hover {
+    background: #cc3127;
+  }
+</style>
+</head>
+<body>
+
+<div class="calculator">
+  <h1>Calculator</h1>
+  <div id="display" class="display">0</div>
+  <div class="buttons">
+    <button class="clear">C</button>
+    <button class="operator">÷</button>
+    <button class="operator">×</button>
+    <button class="operator">−</button>
+
+    <button>7</button>
+    <button>8</button>
+    <button>9</button>
+    <button class="operator">+</button>
+
+    <button>4</button>
+    <button>5</button>
+    <button>6</button>
+    <button>=</button>
+
+    <button>1</button>
+    <button>2</button>
+    <button>3</button>
+    <button>0</button>
+  </div>
+</div>
+
+<script>
+  const display = document.getElementById('display');
+  const buttons = document.querySelectorAll('button');
+
+  let currentInput = '0';
+  let operator = null;
+  let firstOperand = null;
+  let waitingForSecondOperand = false;
+
+  function updateDisplay() {
+    display.textContent = currentInput;
+  }
+
+  function resetCalculator() {
+    currentInput = '0';
+    operator = null;
+    firstOperand = null;
+    waitingForSecondOperand = false;
+  }
+
+  function inputDigit(digit) {
+    if (waitingForSecondOperand) {
+      currentInput = digit;
+      waitingForSecondOperand = false;
+    } else {
+      currentInput = currentInput === '0' ? digit : currentInput + digit;
+    }
+  }
+
+  function inputOperator(nextOperator) {
+    const inputValue = parseFloat(currentInput);
+
+    if (operator && waitingForSecondOperand) {
+      operator = nextOperator;
+      return;
+    }
+
+    if (firstOperand === null) {
+      firstOperand = inputValue;
+    } else if (operator) {
+      const result = performCalculation(operator, firstOperand, inputValue);
+      if (result === 'Error') {
+        currentInput = 'Error';
+        firstOperand = null;
+        operator = null;
+        waitingForSecondOperand = false;
+        updateDisplay();
+        return;
+      }
+      currentInput = String(result);
+      firstOperand = result;
+    }
+
+    waitingForSecondOperand = true;
+    operator = nextOperator;
+  }
+
+  function performCalculation(operator, a, b) {
+    switch(operator) {
+      case '+': return a + b;
+      case '−': return a - b;
+      case '×': return a * b;
+      case '÷': return b === 0 ? 'Error' : a / b;
+      default: return b;
+    }
+  }
+
+  buttons.forEach(button => {
+    button.addEventListener('click', () => {
+      const value = button.textContent;
+
+      if (button.classList.contains('clear')) {
+        resetCalculator();
+        updateDisplay();
+        return;
+      }
+
+      if (button.classList.contains('operator')) {
+        inputOperator(value);
+        updateDisplay();
+        return;
+      }
+
+      if (value === '=') {
+        if (operator === null || waitingForSecondOperand) {
+          // do nothing
+          return;
+        }
+        inputOperator(operator);
+        operator = null;
+        waitingForSecondOperand = false;
+        updateDisplay();
+        return;
+      }
+
+      // If number pressed
+      inputDigit(value);
+      updateDisplay();
+    });
+  });
+
+  updateDisplay();
+</script>
+
+</body>
+</html>
